@@ -1,4 +1,4 @@
-from math import pi,atan2,hypot,floor
+from math import pi,sin,cos,tan,atan2,hypot,floor
 from numpy import clip
 from PIL import Image
 import numpy as np
@@ -45,15 +45,16 @@ def cube_mapping (imgIn,imgOut):
     outSize = imgOut.size
     inPix = imgIn.load()
     outPix = imgOut.load()
-    length=inSize[0]
-    edge = length//4   # the length of each edge in pixels
+    edge = int(inSize[0]/4)   # the length of each edge in pixels
     for i in range(outSize[0]):
-        numface = i//edge
+        numface = int(i/edge)
         face=faces_names[numface]
+
         if face=="f":
-            rng = range(0,edge*3-1)
+            rng = range(0,edge*3)
         else:
-            rng = range(edge,edge*2-1)
+            rng = range(edge,edge*2)
+
         for j in rng:
             if j<edge:
                 face2 = "u"
@@ -77,10 +78,10 @@ def cube_mapping (imgIn,imgOut):
             nu = vf-vi
             # Pixel values of four corners
 
-            A = inPix[ui % length,clip(vi,0,height-1)]
-            B = inPix[u2 % length,clip(vi,0,height-1)]
-            C = inPix[ui % length,clip(v2,0,height-1)]
-            D = inPix[u2 % length,clip(v2,0,height-1)]
+            A = inPix[ui % inSize[0],clip(vi,0,inSize[1]-1)]
+            B = inPix[u2 % inSize[0],clip(vi,0,inSize[1]-1)]
+            C = inPix[ui % inSize[0],clip(v2,0,inSize[1]-1)]
+            D = inPix[u2 % inSize[0],clip(v2,0,inSize[1]-1)]
             # interpolate
 
             (r,g,b) = (
@@ -90,9 +91,9 @@ def cube_mapping (imgIn,imgOut):
 
             outPix[i,j] = (int(round(r)),int(round(g)),int(round(b)))
 
-imgOut = Image.new("RGB",(inSize[0],inSize[0]*3//4),"black")
+imgOut = Image.new("RGB",(inSize[0],int(inSize[0]*3/4)),"black")
 cube_mapping(imgIn,imgOut)
-imgOut.save(sys.argv[1].split('.')[0]+"_cubemap.png")
+imgOut.save(sys.argv[1].split('.')[0]+"cubemap.png")
 
 
 def create_faces(imgOut):
