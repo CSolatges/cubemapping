@@ -18,47 +18,48 @@ def get_closest_2_pow_i_multiple_of_1024_from_height(eqrec):
 
 imgIn = Image.open(sys.argv[1])
 number_level, height=get_closest_2_pow_i_multiple_of_1024_from_height(imgIn)
-inSize=(2*height,height)
-imgIn.resize(inSize)
+#inSize=(2*height,height)
+#imgIn.resize(inSize)
+
+faces_names=["b", "l", "f", "r","u", "d"]
 
 def outImgToXYZ(i,j,face,edge):
     a = 2.0*float(i)/edge
     b = 2.0*float(j)/edge
-    if face=="b":
+    if face=='b':
         (x,y,z) = (-1.0, 1.0-a, 3.0 - b)
-    elif face=="l":
+    elif face=='l':
         (x,y,z) = (a-3.0, -1.0, 3.0 - b)
-    elif face=="f":
+    elif face=='f': 
         (x,y,z) = (1.0, a - 5.0, 3.0 - b)
-    elif face=="r":
+    elif face=='r': 
         (x,y,z) = (7.0-a, 1.0, 3.0 - b)
-    elif face=="u":
+    elif face=='u': 
         (x,y,z) = (b-1.0, a -5.0, 1.0)
-    elif face=="d":
+    elif face=='d':
         (x,y,z) = (5.0-b, a-5.0, -1.0)
     return (x,y,z)
 
-faces_names=["b", "l", "f", "r","u", "d"]
-
 # convert using an inverse transformation
-def cube_mapping (imgIn,imgOut):
+def cube_mapping(imgIn,imgOut):
+    inSize=imgIn.size
     outSize = imgOut.size
     inPix = imgIn.load()
     outPix = imgOut.load()
-    length=inSize[0]
-    edge = length//4   # the length of each edge in pixels
+    edge = inSize[0]//4   # the length of each edge in pixels
     for i in range(outSize[0]):
-        numface = i//edge
-        face=faces_names[numface]
-        if face=="f":
-            rng = range(0,edge*3-1)
+        face_number = i//edge 
+        face=faces_names[face_number]
+        if face_number==2:
+            rng = range(0,edge*3)
         else:
-            rng = range(edge,edge*2-1)
+            rng = range(edge,edge*2)
+
         for j in rng:
             if j<edge:
-                face2 = "u"
+                face2 = 'u' 
             elif j>=2*edge:
-                face2 = "d"
+                face2 = 'd'
             else:
                 face2 = face
             (x,y,z) = outImgToXYZ(i,j,face2,edge)
@@ -76,13 +77,11 @@ def cube_mapping (imgIn,imgOut):
             mu = uf-ui      # fraction of way across pixel
             nu = vf-vi
             # Pixel values of four corners
-
-            A = inPix[ui % length,clip(vi,0,height-1)]
-            B = inPix[u2 % length,clip(vi,0,height-1)]
-            C = inPix[ui % length,clip(v2,0,height-1)]
-            D = inPix[u2 % length,clip(v2,0,height-1)]
+            A = inPix[ui % inSize[0],clip(vi,0,inSize[1]-1)]
+            B = inPix[u2 % inSize[0],clip(vi,0,inSize[1]-1)]
+            C = inPix[ui % inSize[0],clip(v2,0,inSize[1]-1)]
+            D = inPix[u2 % inSize[0],clip(v2,0,inSize[1]-1)]
             # interpolate
-
             (r,g,b) = (
               A[0]*(1-mu)*(1-nu) + B[0]*(mu)*(1-nu) + C[0]*(1-mu)*nu+D[0]*mu*nu,
               A[1]*(1-mu)*(1-nu) + B[1]*(mu)*(1-nu) + C[1]*(1-mu)*nu+D[1]*mu*nu,
@@ -90,6 +89,7 @@ def cube_mapping (imgIn,imgOut):
 
             outPix[i,j] = (int(round(r)),int(round(g)),int(round(b)))
 
+inSize=imgIn.size
 imgOut = Image.new("RGB",(inSize[0],inSize[0]*3//4),"black")
 cube_mapping(imgIn,imgOut)
 imgOut.save(sys.argv[1].split('.')[0]+"_cubemap.png")
