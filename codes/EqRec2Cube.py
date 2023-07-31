@@ -12,14 +12,15 @@ def get_closest_2_pow_i_multiple_of_1024_from_height(eqrec):
     """trouve le multiple de 1024 en fomat 2^i le plus proche de la hauteur; retourne, la valeur de i et la nouvelle hauteur """
     hauteur=eqrec.size[1]
     i=0
-    while hauteur >= 1024*(2**i):
+    while hauteur >=1024*(2**i):
         i+=1
-    return(i,1024*2**i)
+    return(i,1024*(2**i))
 
 imgIn = Image.open(sys.argv[1])
 number_level, height=get_closest_2_pow_i_multiple_of_1024_from_height(imgIn)
-#inSize=(2*height,height)
-#imgIn.resize(inSize)
+inSize=(2*height,height)
+imgIn= imgIn.resize(inSize)
+
 
 faces_names=["b", "l", "f", "r","u", "d"]
 
@@ -42,7 +43,7 @@ def outImgToXYZ(i,j,face,edge):
 
 # convert using an inverse transformation
 def cube_mapping(imgIn,imgOut):
-    inSize=imgIn.size
+    #inSize=imgIn.size
     outSize = imgOut.size
     inPix = imgIn.load()
     outPix = imgOut.load()
@@ -89,7 +90,6 @@ def cube_mapping(imgIn,imgOut):
 
             outPix[i,j] = (int(round(r)),int(round(g)),int(round(b)))
 
-inSize=imgIn.size
 imgOut = Image.new("RGB",(inSize[0],inSize[0]*3//4),"black")
 cube_mapping(imgIn,imgOut)
 imgOut.save(sys.argv[1].split('.')[0]+"_cubemap.png")
@@ -147,16 +147,15 @@ FACES= create_faces(imgOut)
 
 
 def create_tiles(FACES):
-    """fonction qui prend en argument le niveau de découpe et qui retourne les tuiles correspondantes"""
-    """level n = (n+1)² tuiles / face"""
-    dossier_parent = Path("/home/constance/Documents/GM4/Stage/codes/")
+    #mettre le chemin absolu du dossier ou se situe le code
+    dossier_parent = Path("/home/constance/Documents/GM4/Stage/cubemapping/codes")
     img=str(sys.argv[1].split('.')[0])
     dossier_img=img
     for m in range(len(FACES)):
         dossier_face = faces_names[m]
         face=FACES[m]
         niv=str(0)
-        dossier_niveau=niva=str(0)
+        dossier_niveau=str(0)
         dossier_ligne=niv
         chemin_dossier_ligne = dossier_parent / dossier_img/ dossier_niveau / dossier_face / dossier_ligne
         chemin_dossier_ligne.mkdir(parents=True, exist_ok=True)
@@ -186,4 +185,4 @@ def create_tiles(FACES):
                     sous_image.save(chemin_dossier_ligne.resolve() / "_{}.jpg".format(j))
 
 
-#create_tiles(FACES)
+create_tiles(FACES)
