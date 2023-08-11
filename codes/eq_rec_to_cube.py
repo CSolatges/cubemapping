@@ -29,7 +29,7 @@ def main():
     img_cubemap = Image.new(
         "RGB", (cubemap_width, cubemap_height), "black")
     cube_mapping(img_equi, img_cubemap)
-    img_cubemap_path = img_equi_path.split('.')[0]+"_cubemap.png"
+    img_cubemap_path = img_equi_path.split('.', maxsplit=1)[0]+"_cubemap.png"
     img_cubemap.save(img_cubemap_path)
     faces = create_faces(img_cubemap)
     create_tiles(faces, number_level)
@@ -60,29 +60,29 @@ def from_equi_xy_to_cube_xyz(pixel_x_360: int, pixel_y_360: int, face: str, edge
 def cube_mapping(img_equi: Image.Image, img_cubemap: Image.Image) -> None:
     inPix = img_equi.load()
     outPix = img_cubemap.load()
-    edge = img_equi.width//4   # the length of each edge in pixels
+    edge_size = img_equi.width//4   # the length of each edge in pixels
     for i in range(img_cubemap.width):
-        face_number = i//edge
+        face_number = i//edge_size
         face = faces_names[face_number]
         if face_number == 2:
-            rng = range(0, edge*3)
+            rng = range(0, edge_size*3)
         else:
-            rng = range(edge, edge*2)
+            rng = range(edge_size, edge_size*2)
 
         for j in rng:
-            if j < edge:
+            if j < edge_size:
                 face2 = 'u'
-            elif j >= 2*edge:
+            elif j >= 2*edge_size:
                 face2 = 'd'
             else:
                 face2 = face
-            (x, y, z) = from_equi_xy_to_cube_xyz(i, j, face2, edge)
+            (x, y, z) = from_equi_xy_to_cube_xyz(i, j, face2, edge_size)
             theta = atan2(y, x)  # range -pi to pi
             r = hypot(x, y)
             phi = atan2(z, r)  # range -pi/2 to pi/2
             # source img coords
-            uf = (2.0*edge*(theta + pi)/pi)
-            vf = (2.0*edge * (pi/2 - phi)/pi)
+            uf = 2.0*edge_size*(theta + pi)/pi
+            vf = 2.0*edge_size * (pi/2 - phi)/pi
             # Use bilinear interpolation between the four surrounding pixels
             ui = floor(uf)  # coord of pixel to bottom left
             vi = floor(vf)
@@ -161,7 +161,7 @@ def create_faces(img_cubemap: Image.Image) -> Faces:
 def create_tiles(faces: Faces, number_level: int):
     # mettre le chemin absolu du dossier ou se situe le code
     dossier_parent = Path("./cubemapping/codes")
-    img = str(sys.argv[1].split('.')[0])
+    img = str(sys.argv[1].split('.', maxsplit=1)[0])
     dossier_img = img
     for (face, dossier_face) in zip(faces, faces_names):
         niv = '0'
@@ -171,8 +171,8 @@ def create_tiles(faces: Faces, number_level: int):
             dossier_parent, dossier_img, dossier_niveau, dossier_face, dossier_ligne)
         chemin_dossier_ligne.mkdir(parents=True, exist_ok=True)
         face256 = face.copy()
-        face256.resize((256, 256))
-        file_name = "_"+dossier_face+"_256.jpg"
+        face256 = face256.resize((256, 256))
+        file_name = "0.jpg"
         face256.save(chemin_dossier_ligne.resolve() / file_name)
 
         for level in range(number_level):
@@ -182,21 +182,21 @@ def create_tiles(faces: Faces, number_level: int):
             niv = str(level+1)
             dossier_niveau = niv
 
-            for i in range(2**level):
-                a = str(i)
+            for col in range(2**level):
+                a = str(col)
                 dossier_ligne = a
                 chemin_dossier_ligne = dossier_parent / dossier_img / \
                     dossier_niveau / dossier_face / dossier_ligne
                 chemin_dossier_ligne.mkdir(parents=True, exist_ok=True)
 
-                for j in range(2**level):
-                    x = i * largeur_sous_image
-                    y = j * hauteur_sous_image
+                for line in range(2**level):
+                    x = line * largeur_sous_image
+                    y = col * hauteur_sous_image
                     sous_image = face.crop(
                         (x, y, x + largeur_sous_image, y + hauteur_sous_image))
                     sous_image = sous_image.resize((512, 512))
                     sous_image.save(
-                        chemin_dossier_ligne.resolve() / "_{}.jpg".format(j))
+                        chemin_dossier_ligne.resolve() / "{}.jpg".format(line))
 
 
 if __name__ == '__main__':
